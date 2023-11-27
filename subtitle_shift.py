@@ -4,41 +4,42 @@ from datetime import datetime
 SUBTITLE_TIME_FORMAT = '%H:%M:%S,%f'
 
 def main():
-    file_content = read_file()
-    parse_file(file_content)
+    sub_parser = SubtitleFileParser()
+    parsed_subs = sub_parser.parse()
     
-    for sub in SubtitleBlock.subtitle_blocks[:5]:
+    for sub in parsed_subs[:5]:
         print(sub.str_full())
     
 
 class SubtitleFileParser:
-    def __init__(self) -> None:
-        pass
+    subtitle_file_path = 'subtitles.srt'
+    file_content = None
 
-    def read_file(to_list=False):
-        with open('subtitles.srt', 'r') as file:
-            if to_list:
-                return file.readlines()
-            else:
-                return file.read()
+    def __init__(self, file_path) -> None:
+        self.subtitle_file_path = file_path
 
-    def parse_file(file_content: str):
-        if not file_content:
-            return
-        elif type(file_content) != str:
+    def read_file(self, to_list=False):
+        with open(self.file_path, 'r') as file:
+            self.file_content = file.read()
+            return self.file_content
+
+    def parse(self, file=None):
+        if file:
+            self.read_file(file)
+        elif type(file) != str:
             raise TypeError('Incorrect argument type. Str expected.')
-        
-        SubtitleBlock.subtitle_blocks.clear()
 
         pattern = r'(\d+)\n(\d\d.*\d\d\d) --> (\d\d.*\d\d\d)\n(?:(?:\n\n)|((?:.+\n)+))'
         subtitle_blocks = re.findall(
             pattern,
-            file_content
+            self.file_content
         )
+
+        subtitle_blocks = []
 
         for block in subtitle_blocks:
             try:
-                SubtitleBlock.subtitle_blocks.append(
+                subtitle_blocks.append(
                     SubtitleBlock(
                         order=int(block[0]),
                         start_time=datetime.strptime(block[1], SUBTITLE_TIME_FORMAT),
@@ -57,8 +58,6 @@ class SubtitleFileParser:
 
 
 class SubtitleBlock:
-    subtitle_blocks = []
-
     def __init__(self):
         pass
 
